@@ -32,39 +32,17 @@ namespace project
             double[] Ys = Globals.Ys;
             double[,] Xt = TransposeMatrix(Xs); // X^T
             Console.WriteLine("Xt:");
-            for (i = 0; i < Xt.GetLength(0); i++)
-            {
-                for ( j = 0; j < Xt.GetLength(1); j++)
-                {
-                    Console.Write(Xt[i, j].ToString("F4") + "\t");
-                }
-                Console.WriteLine();
-                Console.WriteLine();
-            }
-
             double[,] XtX = MultiplyMatrices(Xt, Xs);             // X^T * X
-            for( i = 0; i < XtX.GetLength(0); i++)
-            {
-                for ( j = 0; j < XtX.GetLength(1); j++)
-                {
-                    Console.Write(XtX[i, j].ToString("F4") + "\t");
-                }
-                Console.WriteLine();
-            }
-
             double[,] XtXInv = InverseMatrix(XtX);                // (X^T * X)^-1
-            for (i = 0; i < XtXInv.GetLength(0); i++)
-            {
-                for ( j = 0; j < XtXInv.GetLength(1); j++)
-                {
-                    Console.Write(XtXInv[i, j].ToString("F4") + "\t");
-                }
-                Console.WriteLine();
-            }
-
             double[] XtY = MultiplyMatrixVector(Xt, Ys);         // X^T * y
             Globals.theta = MultiplyMatrixVector(XtXInv, XtY);  // (X^T * X)^-1 * (X^T * y)
         }
+        /// <summary>
+        /// Predicts output values based on the input matrix and regression coefficients.
+        /// </summary>
+        /// <param name="Xs">Input matrix where each row represents a sample and each column a feature.</param>
+        /// <param name="betas">Array of regression coefficients corresponding to each feature.</param>
+        /// <returns>An array of predicted values, one for each sample.</returns>
 
         public static (double, double) Predict(double[] XTest, double YTest)
         {
@@ -202,39 +180,39 @@ namespace project
                 Console.WriteLine($"θ[{i}] = {theta[i]:F6}");
             }
 
-            // 🔹 נרמול הנתונים כדי למנוע גדלים לא תקינים
-            //for (int j = 0; j < n; j++)
-            //{
-            //    double mean = 0;
-            //    double std = 0;
+             //🔹 נרמול הנתונים כדי למנוע גדלים לא תקינים
+            for (int j = 0; j < n; j++)
+            {
+                double mean = 0;
+                double std = 0;
 
-            //    for (int i = 0; i < m; i++)
-            //    {
-            //        mean += X[i, j];
-            //    }
-            //    mean /= m;
+                for (int i = 0; i < m; i++)
+                {
+                    mean += X[i, j];
+                }
+                mean /= m;
 
-            //    for (int i = 0; i < m; i++)
-            //    {
-            //        std += Math.Pow(X[i, j] - mean, 2);
-            //    }
-            //    std = Math.Sqrt(std / m);
+                for (int i = 0; i < m; i++)
+                {
+                    std += Math.Pow(X[i, j] - mean, 2);
+                }
+                std = Math.Sqrt(std / m);
 
-            //    // ✅ תיקון: מניעת חילוק ב-0
-            //    if (std == 0)
-            //    {
-            //        Console.WriteLine($"⚠ אזהרה: std[{j}] = 0, שינוי ל-1 כדי למנוע חילוק ב-0");
-            //        std = 1;
-            //    }
+                // ✅ תיקון: מניעת חילוק ב-0
+                if (std == 0)
+                {
+                    Console.WriteLine($"⚠ אזהרה: std[{j}] = 0, שינוי ל-1 כדי למנוע חילוק ב-0");
+                    std = 1;
+                }
 
-            //    for (int i = 0; i < m; i++)
-            //    {
-            //        X[i, j] = (X[i, j] - mean) / std;
-            //    }
-            //}
+                for (int i = 0; i < m; i++)
+                {
+                    X[i, j] = (X[i, j] - mean) / std;
+                }
+            }
 
             int maxIterations = 1000;
-            double learningRate = 0.1;
+            double learningRate = 0.0001;
             double tolerance = 1e-6;
             double previousCost = double.MaxValue;
             int iter = 0;
@@ -252,7 +230,7 @@ namespace project
                 }
 
                 // 🔹 עדכון פרמטרים
-                for (int j = 0; j < n; j++)
+                for (int j = 1; j < n; j++)
                 {
                     double gradient = 0;
                     for (int i = 0; i < m; i++)
@@ -312,7 +290,7 @@ namespace project
 
         public static void SaveThetaToFile(double[] theta)
         {
-            using (StreamWriter writer = new StreamWriter(Globals.filePath, false)) // false => דריסה ולא הוספה
+            using (StreamWriter writer = new StreamWriter(DataLoader.getFilePath(), false)) // false => דריסה ולא הוספה
             {
                 foreach (double value in theta)
                 {
@@ -447,7 +425,7 @@ namespace project
         {
             try
             {
-                using (var package = new ExcelPackage(new FileInfo(Globals.filePath)))
+                using (var package = new ExcelPackage(new FileInfo(DataLoader.getFilePath())))
                 {
                     var worksheet = package.Workbook.Worksheets[0];
                     bool hasBiasColumn = false;
